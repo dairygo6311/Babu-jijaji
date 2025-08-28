@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SUDHA SAGAR - Settings Management</title>
+    <link rel="stylesheet" href="./css/styles.css">
+    <script src="https://unpkg.com/feather-icons"></script>
+</head>
+<body>
+    <div class="settings-container">
+        <div class="settings-header">
+            <div class="settings-title">
+                <i data-feather="settings"></i>
+                <h1>Settings Management</h1>
+            </div>
+            <p>Manage all your project configurations in one place</p>
+        </div>
+
+        <div class="settings-content">
+            <form id="settings-form" class="settings-form">
+                <!-- Project Configuration Section -->
+                <div class="settings-section">
+                    <h2>
+                        <i data-feather="folder"></i>
+                        Project Configuration
+                    </h2>
+                    <div class="form-group">
+                        <label for="project-name">Project Name</label>
+                        <input type="text" id="project-name" placeholder="e.g., SUDHA SAGAR" required>
+                        <small>This will be displayed in the app header and all customer communications</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="business-type">Business Type</label>
+                        <input type="text" id="business-type" placeholder="e.g., DAIRY" required>
+                        <small>Used in telegram messages and branding</small>
+                    </div>
+                </div>
+
+                <!-- Contact Information Section -->
+                <div class="settings-section">
+                    <h2>
+                        <i data-feather="phone"></i>
+                        Contact Information
+                    </h2>
+                    <div class="form-group">
+                        <label for="contact-number">Contact Number</label>
+                        <input type="tel" id="contact-number" placeholder="e.g., 9413577474" required pattern="[0-9]{10}">
+                        <small>This number will be shown in all customer messages for queries</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="admin-email">Admin Email</label>
+                        <input type="email" id="admin-email" placeholder="admin@example.com" required>
+                        <small>Primary admin email for authentication and notifications</small>
+                    </div>
+                </div>
+
+                <!-- Firebase Configuration Section -->
+                <div class="settings-section">
+                    <h2>
+                        <i data-feather="database"></i>
+                        Firebase Configuration
+                    </h2>
+                    <div class="firebase-warning">
+                        <i data-feather="alert-triangle"></i>
+                        <p><strong>Warning:</strong> Changing Firebase settings will require redeployment. Only modify if you know what you're doing.</p>
+                    </div>
+                    <div class="form-group">
+                        <label for="firebase-api-key">API Key</label>
+                        <input type="text" id="firebase-api-key" placeholder="AIzaSy..." required>
+                    </div>
+                    <div class="form-group">
+                        <label for="firebase-auth-domain">Auth Domain</label>
+                        <input type="text" id="firebase-auth-domain" placeholder="project-id.firebaseapp.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="firebase-project-id">Project ID</label>
+                        <input type="text" id="firebase-project-id" placeholder="project-id" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="firebase-storage-bucket">Storage Bucket</label>
+                        <input type="text" id="firebase-storage-bucket" placeholder="project-id.firebasestorage.app" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="firebase-messaging-sender-id">Messaging Sender ID</label>
+                        <input type="text" id="firebase-messaging-sender-id" placeholder="123456789" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="firebase-app-id">App ID</label>
+                        <input type="text" id="firebase-app-id" placeholder="1:123:web:abc" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="firebase-measurement-id">Measurement ID (Optional)</label>
+                        <input type="text" id="firebase-measurement-id" placeholder="G-XXXXXXXXXX">
+                    </div>
+                    <div class="form-group">
+                        <label for="firebase-database-url">Database URL (Optional)</label>
+                        <input type="text" id="firebase-database-url" placeholder="https://project-id-default-rtdb.firebaseio.com">
+                    </div>
+                </div>
+
+                <!-- Telegram Configuration Section -->
+                <div class="settings-section">
+                    <h2>
+                        <i data-feather="message-circle"></i>
+                        Telegram Configuration
+                    </h2>
+                    <div class="form-group">
+                        <label for="telegram-bot-token">Telegram Bot Token</label>
+                        <input type="text" id="telegram-bot-token" placeholder="123456789:ABCdefGhIJKlmnoPQRstuvwxyz" required>
+                        <small>Get this from @BotFather on Telegram</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="admin-chat-id">Admin Chat ID</label>
+                        <input type="text" id="admin-chat-id" placeholder="123456789" required>
+                        <small>Your Telegram chat ID for receiving admin notifications</small>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" id="test-telegram" class="btn btn-secondary">
+                            <i data-feather="send"></i>
+                            Test Telegram Bot
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="settings-actions">
+                    <button type="button" id="load-current-settings" class="btn btn-secondary">
+                        <i data-feather="refresh-cw"></i>
+                        Load Current Settings
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i data-feather="save"></i>
+                        Save All Settings
+                    </button>
+                    <button type="button" id="reset-settings" class="btn btn-danger">
+                        <i data-feather="rotate-ccw"></i>
+                        Reset to Defaults
+                    </button>
+                </div>
+            </form>
+
+            <!-- Status Section -->
+            <div class="settings-status" id="settings-status">
+                <h3>Current Status</h3>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <i data-feather="database" class="status-icon"></i>
+                        <div class="status-info">
+                            <span class="status-label">Firebase</span>
+                            <span class="status-value" id="firebase-status">Not Connected</span>
+                        </div>
+                    </div>
+                    <div class="status-item">
+                        <i data-feather="message-circle" class="status-icon"></i>
+                        <div class="status-info">
+                            <span class="status-label">Telegram Bot</span>
+                            <span class="status-value" id="telegram-status">Not Connected</span>
+                        </div>
+                    </div>
+                    <div class="status-item">
+                        <i data-feather="clock" class="status-icon"></i>
+                        <div class="status-info">
+                            <span class="status-label">Last Updated</span>
+                            <span class="status-value" id="last-updated">Never</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Help Section -->
+            <div class="settings-help">
+                <h3>
+                    <i data-feather="help-circle"></i>
+                    Need Help?
+                </h3>
+                <div class="help-content">
+                    <div class="help-item">
+                        <strong>Project Name:</strong> This will appear in your app header and all customer communications
+                    </div>
+                    <div class="help-item">
+                        <strong>Contact Number:</strong> Customers will see this number in all Telegram messages for support
+                    </div>
+                    <div class="help-item">
+                        <strong>Telegram Bot Token:</strong> Create a bot with @BotFather on Telegram to get this token
+                    </div>
+                    <div class="help-item">
+                        <strong>Admin Chat ID:</strong> Send /start to your bot, then use @userinfobot to get your chat ID
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success/Error Messages -->
+    <div id="notification-container"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner">
+            <i data-feather="loader"></i>
+            <p>Updating Settings...</p>
+        </div>
+    </div>
+
+    <!-- Firebase and Settings Scripts -->
+    <script type="module" src="./js/firebase-config.js"></script>
+    <script type="module" src="./js/settings.js"></script>
+    
+    <script>
+        // Initialize Feather icons
+        feather.replace();
+    </script>
+</body>
+</html>

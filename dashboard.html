@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SUDHA SAGAR - Dashboard</title>
+    <link rel="stylesheet" href="./css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="header-left">
+                    <button class="mobile-menu-toggle" id="mobile-menu-toggle">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                    <img src="./sudha-sagar-logo.jpg" alt="SUDHA SAGAR" class="header-logo">
+                    <h1>SUDHA SAGAR</h1>
+                </div>
+                <div class="header-right">
+                    <span id="admin-email" class="admin-email"></span>
+                    <button id="logout-btn" class="btn btn-secondary">
+                        <i data-feather="log-out"></i>
+                        <span class="btn-text">Logout</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <div class="nav-overlay" id="nav-overlay"></div>
+        <nav class="nav" id="navigation">
+            <div class="nav-content">
+                <button class="nav-item active" data-view="dashboard">
+                    <i data-feather="home"></i>
+                    <span class="nav-text">Dashboard</span>
+                </button>
+                <a href="customers.html" class="nav-item">
+                    <i data-feather="users"></i>
+                    <span class="nav-text">Customers</span>
+                </a>
+                <a href="deliveries.html" class="nav-item">
+                    <i data-feather="truck"></i>
+                    <span class="nav-text">Deliveries</span>
+                </a>
+                <a href="payments.html" class="nav-item">
+                    <i data-feather="credit-card"></i>
+                    <span class="nav-text">Payment Management</span>
+                </a>
+                <a href="reports.html" class="nav-item">
+                    <i data-feather="file-text"></i>
+                    <span class="nav-text">Reports</span>
+                </a>
+                <a href="customer-details.html" class="nav-item">
+                    <i data-feather="calendar"></i>
+                    <span class="nav-text">Customer Details</span>
+                </a>
+                <a href="broadcast.html" class="nav-item">
+                    <i data-feather="send"></i>
+                    <span class="nav-text">Broadcast</span>
+                </a>
+                <a href="admin-license.html" class="nav-item">
+                    <i data-feather="shield"></i>
+                    <span class="nav-text">License Admin</span>
+                </a>
+                <a href="settings.html" class="nav-item">
+                    <i data-feather="settings"></i>
+                    <span class="nav-text">Settings</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Dashboard View -->
+            <div id="dashboard-view" class="view active">
+                <div class="view-header">
+                    <h2>Dashboard Overview</h2>
+                    <div class="date-display">
+                        <i data-feather="calendar"></i>
+                        <span id="current-date"></span>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i data-feather="users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="total-customers">0</h3>
+                            <p>Total Customers</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon delivered">
+                            <i data-feather="check-circle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="delivered-today">0</h3>
+                            <p>Delivered Today</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon skipped">
+                            <i data-feather="x-circle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="skipped-today">0</h3>
+                            <p>Skipped Today</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon pending">
+                            <i data-feather="clock"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="pending-today">0</h3>
+                            <p>Pending Today</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i data-feather="droplet"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="total-milk-today">0L</h3>
+                            <p>Total Milk Today</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon revenue">
+                            <i data-feather="dollar-sign"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 id="total-revenue-today">₹0</h3>
+                            <p>Revenue Today</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-section">
+                    <div class="chart-card">
+                        <h3>Daily Delivery Trend</h3>
+                        <canvas id="daily-chart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Monthly Revenue</h3>
+                        <canvas id="monthly-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Firebase SDKs -->
+    <script type="module" src="./js/firebase-config.js"></script>
+    <script type="module" src="./js/auth.js"></script>
+    <script type="module" src="./js/loading-utils.js"></script>
+    <script type="module" src="./js/dashboard.js"></script>
+    <script type="module" src="./js/simple-nav.js"></script>
+
+    <script>
+        // Initialize Feather icons
+        feather.replace();
+    </script>
+</body>
+</html>

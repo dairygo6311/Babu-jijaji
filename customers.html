@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SUDHA SAGAR - Customer Management</title>
+    <link rel="stylesheet" href="./css/styles.css">
+    <script src="https://unpkg.com/feather-icons"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="header-left">
+                    <button class="mobile-menu-toggle" id="mobile-menu-toggle">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                    <img src="./sudha-sagar-logo.jpg" alt="SUDHA SAGAR" class="header-logo">
+                    <h1>SUDHA SAGAR</h1>
+                </div>
+                <div class="header-right">
+                    <span id="admin-email" class="admin-email"></span>
+                    <button id="logout-btn" class="btn btn-secondary">
+                        <i data-feather="log-out"></i>
+                        <span class="btn-text">Logout</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <div class="nav-overlay" id="nav-overlay"></div>
+        <nav class="nav" id="navigation">
+            <div class="nav-content">
+                <a href="dashboard.html" class="nav-item">
+                    <i data-feather="home"></i>
+                    <span class="nav-text">Dashboard</span>
+                </a>
+                <button class="nav-item active" data-view="customers">
+                    <i data-feather="users"></i>
+                    <span class="nav-text">Customers</span>
+                </button>
+                <a href="deliveries.html" class="nav-item">
+                    <i data-feather="truck"></i>
+                    <span class="nav-text">Deliveries</span>
+                </a>
+                <a href="payments.html" class="nav-item">
+                    <i data-feather="credit-card"></i>
+                    <span class="nav-text">Payment Management</span>
+                </a>
+                <a href="reports.html" class="nav-item">
+                    <i data-feather="file-text"></i>
+                    <span class="nav-text">Reports</span>
+                </a>
+                <a href="customer-details.html" class="nav-item">
+                    <i data-feather="calendar"></i>
+                    <span class="nav-text">Customer Details</span>
+                </a>
+                <a href="broadcast.html" class="nav-item">
+                    <i data-feather="send"></i>
+                    <span class="nav-text">Broadcast</span>
+                </a>
+                <a href="admin-license.html" class="nav-item">
+                    <i data-feather="shield"></i>
+                    <span class="nav-text">License Admin</span>
+                </a>
+                <a href="settings.html" class="nav-item">
+                    <i data-feather="settings"></i>
+                    <span class="nav-text">Settings</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Customers View -->
+            <div id="customers-view" class="view active">
+                <div class="view-header">
+                    <h2>Customer Management</h2>
+                    <button id="add-customer-btn" class="btn btn-primary">
+                        <i data-feather="plus"></i>
+                        Add Customer
+                    </button>
+                </div>
+
+                <div class="search-section">
+                    <div class="search-bar">
+                        <i data-feather="search"></i>
+                        <input type="text" id="customer-search" placeholder="Search customers...">
+                    </div>
+                    <div class="filters">
+                        <select id="status-filter">
+                            <option value="">All Status</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="customers-grid" id="customers-grid">
+                    <!-- Customer cards will be populated here -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Customer Modal -->
+    <div id="customer-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Add Customer</h3>
+                <button id="close-modal" class="close-btn">
+                    <i data-feather="x"></i>
+                </button>
+            </div>
+            <form id="customer-form">
+                <div class="form-group">
+                    <label for="customer-name">Name:</label>
+                    <input type="text" id="customer-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="customer-phone">Mobile:</label>
+                    <input type="tel" id="customer-phone" required>
+                </div>
+                <!-- Delivery Schedule Selection -->
+                <div class="form-group">
+                    <label for="delivery-schedule">Delivery Schedule:</label>
+                    <select id="delivery-schedule" required>
+                        <option value="">Select Delivery Time</option>
+                        <option value="morning-only">Morning Only</option>
+                        <option value="evening-only">Evening Only</option>
+                        <option value="both">Both Morning & Evening</option>
+                    </select>
+                </div>
+
+                <!-- Morning Delivery Details -->
+                <div id="morning-details" class="schedule-details" style="display: none;">
+                    <h4>Morning Delivery</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="morning-qty">Morning Quantity (L):</label>
+                            <input type="number" id="morning-qty" step="0.1" min="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label for="morning-time">Morning Time:</label>
+                            <input type="time" id="morning-time" value="06:00">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Evening Delivery Details -->
+                <div id="evening-details" class="schedule-details" style="display: none;">
+                    <h4>Evening Delivery</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="evening-qty">Evening Quantity (L):</label>
+                            <input type="number" id="evening-qty" step="0.1" min="0.1">
+                        </div>
+                        <div class="form-group">
+                            <label for="evening-time">Evening Time:</label>
+                            <input type="time" id="evening-time" value="18:00">
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="customer-rate">Rate per Liter (₹):</label>
+                    <input type="number" id="customer-rate" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="customer-address">Address:</label>
+                    <textarea id="customer-address" rows="3" placeholder="Enter customer address"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="customer-added-date">Added Date:</label>
+                    <input type="date" id="customer-added-date">
+                </div>
+                <div class="form-group">
+                    <label for="customer-telegram">Telegram Chat ID:</label>
+                    <input type="text" id="customer-telegram" placeholder="Optional">
+                </div>
+                <div class="form-group">
+                    <label for="customer-status">Status:</label>
+                    <select id="customer-status">
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="cancel-modal" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Firebase SDKs -->
+    <script type="module" src="./js/firebase-config.js"></script>
+    <script type="module" src="./js/auth.js"></script>
+    <script type="module" src="./js/loading-utils.js"></script>
+    <script type="module" src="./js/customers.js"></script>
+    <script type="module" src="./js/simple-nav.js"></script>
+
+    <script>
+        // Initialize Feather icons
+        feather.replace();
+    </script>
+</body>
+</html>

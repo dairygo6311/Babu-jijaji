@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SUDHA SAGAR - License Verification</title>
+    <link rel="stylesheet" href="./css/styles.css">
+    <script src="https://unpkg.com/feather-icons"></script>
+</head>
+<body>
+    <div class="license-verification-container">
+        <div class="license-card">
+            <div class="license-header">
+                <img src="./sudha-sagar-logo.jpg" alt="SUDHA SAGAR" class="license-logo">
+                <h1>SUDHA SAGAR</h1>
+                <p>License Verification Required</p>
+            </div>
+            
+            <div class="license-info">
+                <div class="info-icon">
+                    <i data-feather="shield-off"></i>
+                </div>
+                <h2>Access Restricted</h2>
+                <p>Your license key has expired, been deactivated, or is invalid. Please contact the administrator to purchase or renew your license.</p>
+            </div>
+
+            <form id="license-form" class="license-form">
+                <div class="input-group">
+                    <label for="license-key">Enter License Key</label>
+                    <input type="text" id="license-key" placeholder="Enter your license key" required>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i data-feather="key"></i>
+                    <span>Verify License</span>
+                </button>
+            </form>
+            
+            <div id="license-error" class="error-message"></div>
+            <div id="license-success" class="success-message"></div>
+
+            <div class="contact-section">
+                <div class="contact-header">
+                    <i data-feather="phone"></i>
+                    <h3>Need a License Key?</h3>
+                </div>
+                <p>Contact us on WhatsApp to purchase a new license:</p>
+                <a href="https://wa.me/918239913685" target="_blank" class="whatsapp-link">
+                    <i data-feather="message-circle"></i>
+                    <span>+91 8239913685</span>
+                </a>
+                <p class="contact-note">Available 24/7 for license support</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <p>Verifying License...</p>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module" src="./js/firebase-config.js"></script>
+    <script type="module" src="./js/license-verification.js"></script>
+
+    <script>
+        // Initialize Feather icons
+        feather.replace();
+    </script>
+</body>
+</html>

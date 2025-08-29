@@ -83,6 +83,12 @@ class PaymentManager {
         if (clearReminderBtn) {
             clearReminderBtn.addEventListener('click', this.clearReminderSelection.bind(this));
         }
+
+        // PDF generation button
+        const pdfBtn = document.getElementById('generate-pdf-report');
+        if (pdfBtn) {
+            pdfBtn.addEventListener('click', this.generatePDFReport.bind(this));
+        }
     }
 
     setCurrentMonth() {
@@ -840,6 +846,159 @@ class PaymentManager {
         
         // Reset dropdown to default state
         this.populateCustomerDropdownForReminder();
+    }
+
+    async generatePDFReport() {
+        if (!this.paymentData || this.paymentData.length === 0) {
+            this.showError('No payment data available. Please refresh the data first.');
+            return;
+        }
+
+        try {
+            this.showLoading(true);
+
+            // Get jsPDF from global window object
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Get current month name for title
+            const monthName = new Date(this.currentMonth + '-01').toLocaleDateString('en-IN', { 
+                month: 'long', 
+                year: 'numeric' 
+            });
+
+            // PDF Title and Header
+            doc.setFontSize(20);
+            doc.setTextColor(40, 40, 40);
+            doc.text('SUDHA SAGAR', 20, 25);
+            
+            doc.setFontSize(16);
+            doc.text('Payment Management Report', 20, 35);
+            
+            doc.setFontSize(12);
+            doc.text(`Month: ${monthName}`, 20, 45);
+            doc.text(`Generated on: ${new Date().toLocaleDateString('en-IN')}`, 20, 52);
+
+            // Summary Statistics
+            const totalRevenue = this.paymentData.reduce((sum, data) => sum + data.totalAmount, 0);
+            const totalPaid = this.paymentData.reduce((sum, data) => sum + data.paidAmount, 0);
+            const paidCustomers = this.paymentData.filter(data => data.paymentStatus === 'paid').length;
+            const pendingPayments = this.paymentData.filter(data => data.paymentStatus === 'pending').length;
+            const partialPayments = this.paymentData.filter(data => data.paymentStatus === 'partial').length;
+            const totalMilk = this.paymentData.reduce((sum, data) => sum + data.totalMilk, 0);
+
+            // Summary box
+            doc.setFillColor(245, 245, 245);
+            doc.rect(20, 60, 170, 35, 'F');
+            
+            doc.setFontSize(10);
+            doc.setTextColor(60, 60, 60);
+            doc.text('MONTHLY SUMMARY', 25, 70);
+            
+            doc.text(`Total Customers: ${this.paymentData.length}`, 25, 78);
+            doc.text(`Paid Customers: ${paidCustomers}`, 25, 84);
+            doc.text(`Pending Payments: ${pendingPayments}`, 25, 90);
+            
+            doc.text(`Total Revenue: ₹${totalRevenue}`, 100, 78);
+            doc.text(`Total Paid: ₹${totalPaid}`, 100, 84);
+            doc.text(`Total Milk: ${totalMilk.toFixed(1)}L`, 100, 90);
+
+            // Customer Payment Table
+            const tableColumns = [
+                'Customer Name',
+                'Phone',
+                'Days Delivered',
+                'Milk (L)',
+                'Total Amount',
+                'Paid Amount',
+                'Balance',
+                'Status'
+            ];
+
+            const tableRows = this.paymentData.map(data => [
+                data.customer.name,
+                data.customer.phone,
+                data.daysDelivered.toString(),
+                data.totalMilk.toFixed(1),
+                `₹${data.totalAmount}`,
+                `₹${data.paidAmount}`,
+                `₹${data.balanceAmount}`,
+                data.paymentStatus.charAt(0).toUpperCase() + data.paymentStatus.slice(1)
+            ]);
+
+            // Use autoTable plugin to create the table
+            doc.autoTable({
+                head: [tableColumns],
+                body: tableRows,
+                startY: 105,
+                styles: {
+                    fontSize: 8,
+                    cellPadding: 3
+                },
+                headStyles: {
+                    fillColor: [80, 150, 220],
+                    textColor: 255,
+                    fontSize: 9,
+                    fontStyle: 'bold'
+                },
+                alternateRowStyles: {
+                    fillColor: [250, 250, 250]
+                },
+                columnStyles: {
+                    0: { cellWidth: 30 }, // Customer Name
+                    1: { cellWidth: 22 }, // Phone
+                    2: { cellWidth: 15 }, // Days Delivered
+                    3: { cellWidth: 15 }, // Milk
+                    4: { cellWidth: 20 }, // Total Amount
+                    5: { cellWidth: 20 }, // Paid Amount
+                    6: { cellWidth: 18 }, // Balance
+                    7: { cellWidth: 18 }  // Status
+                },
+                didDrawCell: function(data) {
+                    // Color code payment status
+                    if (data.column.index === 7) { // Status column
+                        const status = data.cell.text[0].toLowerCase();
+                        if (status === 'paid') {
+                            data.cell.styles.textColor = [34, 139, 34]; // Green
+                        } else if (status === 'pending') {
+                            data.cell.styles.textColor = [220, 20, 60]; // Red
+                        } else if (status === 'partial') {
+                            data.cell.styles.textColor = [255, 140, 0]; // Orange
+                        }
+                    }
+                    
+                    // Highlight balance amounts
+                    if (data.column.index === 6) { // Balance column
+                        const balance = parseFloat(data.cell.text[0].replace('₹', ''));
+                        if (balance > 0) {
+                            data.cell.styles.textColor = [220, 20, 60]; // Red for pending balance
+                            data.cell.styles.fontStyle = 'bold';
+                        }
+                    }
+                }
+            });
+
+            // Footer with timestamp
+            const pageCount = doc.internal.getNumberOfPages();
+            const pageHeight = doc.internal.pageSize.height;
+            
+            doc.setFontSize(8);
+            doc.setTextColor(128, 128, 128);
+            doc.text(`Report generated by SUDHA SAGAR Management System`, 20, pageHeight - 20);
+            doc.text(`Page 1 of ${pageCount}`, 170, pageHeight - 20);
+
+            // Save the PDF
+            const fileName = `SUDHA_SAGAR_Payment_Report_${this.currentMonth.replace('-', '_')}.pdf`;
+            doc.save(fileName);
+
+            this.showSuccess(`PDF report generated successfully! File: ${fileName}`);
+
+        } catch (error) {
+            console.error('Error generating PDF report:', error);
+            this.showError('Failed to generate PDF report. Please try again.');
+        } finally {
+            this.showLoading(false);
+        }
     }
 }
 

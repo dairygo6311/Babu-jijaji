@@ -772,7 +772,7 @@ class PaymentManager {
                 <div>📅 Month: ${monthName}</div>
                 <div>💰 Total Amount: ₹${customerPaymentData.totalAmount}</div>
                 <div>✅ Paid Amount: ₹${customerPaymentData.paidAmount}</div>
-                <div>🔔 Balance: ₹${customerPaymentData.balanceAmount}</div>
+                <div>🔔 Balance Due: ₹${customerPaymentData.balanceAmount}</div>
                 <div>📊 Status: ${customerPaymentData.paymentStatus.charAt(0).toUpperCase() + customerPaymentData.paymentStatus.slice(1)}</div>
                 <div>💬 Telegram: ${customer.tg_chat_id}</div>
             `;

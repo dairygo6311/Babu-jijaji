@@ -341,32 +341,159 @@ class PaymentManager {
         const customer = this.customers.find(c => c.id === customerId);
         if (!customer) return;
 
-        const balance = totalAmount - currentPaid;
-        const amount = prompt(`Record payment for ${customer.name}\nBalance Amount: ₹${balance}\n\nEnter payment amount:`);
+        // Show the modern payment dialog
+        this.showPaymentDialog(customer, totalAmount, currentPaid);
+    }
+
+    showPaymentDialog(customer, totalAmount, currentPaid) {
+        const dialog = document.getElementById('payment-dialog');
+        const overlay = dialog;
         
+        // Populate customer information
+        document.getElementById('dialog-customer-name').textContent = customer.name;
+        document.getElementById('dialog-customer-phone').textContent = customer.phone;
+        document.getElementById('dialog-total-amount').textContent = `₹${totalAmount}`;
+        document.getElementById('dialog-paid-amount').textContent = `₹${currentPaid}`;
+        
+        const balance = totalAmount - currentPaid;
+        document.getElementById('dialog-balance-amount').textContent = `₹${balance}`;
+        
+        // Clear form
+        document.getElementById('payment-amount').value = '';
+        document.getElementById('payment-note').value = '';
+        document.querySelector('input[name="payment-method"][value="cash"]').checked = true;
+        
+        // Store customer data for form submission
+        this.currentPaymentData = { customer, totalAmount, currentPaid };
+        
+        // Show dialog with animation
+        overlay.classList.add('active');
+        
+        // Focus on amount input
+        setTimeout(() => {
+            document.getElementById('payment-amount').focus();
+        }, 300);
+        
+        // Setup event listeners if not already done
+        this.setupPaymentDialogListeners();
+    }
+
+    setupPaymentDialogListeners() {
+        // Prevent multiple event listeners
+        if (this.dialogListenersSetup) return;
+        this.dialogListenersSetup = true;
+        
+        const dialog = document.getElementById('payment-dialog');
+        const closeBtn = document.getElementById('payment-dialog-close');
+        const cancelBtn = document.getElementById('payment-cancel');
+        const form = document.getElementById('payment-form');
+        const amountInput = document.getElementById('payment-amount');
+        
+        // Close dialog handlers
+        const closeDialog = () => {
+            dialog.classList.remove('active');
+            this.currentPaymentData = null;
+        };
+        
+        closeBtn.addEventListener('click', closeDialog);
+        cancelBtn.addEventListener('click', closeDialog);
+        
+        // Close on overlay click
+        dialog.addEventListener('click', (e) => {
+            if (e.target === dialog) {
+                closeDialog();
+            }
+        });
+        
+        // ESC key to close
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && dialog.classList.contains('active')) {
+                closeDialog();
+            }
+        });
+        
+        // Quick payment buttons
+        document.querySelectorAll('.quick-payment-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                if (!this.currentPaymentData) return;
+                
+                const type = e.currentTarget.getAttribute('data-type');
+                const balance = this.currentPaymentData.totalAmount - this.currentPaymentData.currentPaid;
+                
+                if (type === 'full') {
+                    amountInput.value = balance;
+                } else if (type === 'half') {
+                    amountInput.value = Math.round(balance / 2);
+                }
+                
+                // Add visual feedback
+                e.currentTarget.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    e.currentTarget.style.transform = '';
+                }, 150);
+            });
+        });
+        
+        // Form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await this.processPaymentFromDialog();
+        });
+        
+        // Amount input validation
+        amountInput.addEventListener('input', (e) => {
+            const value = parseFloat(e.target.value);
+            const submitBtn = document.getElementById('payment-submit');
+            
+            if (isNaN(value) || value <= 0) {
+                submitBtn.disabled = true;
+            } else {
+                submitBtn.disabled = false;
+            }
+        });
+    }
+
+    async processPaymentFromDialog() {
+        if (!this.currentPaymentData) return;
+        
+        const amountInput = document.getElementById('payment-amount');
+        const noteInput = document.getElementById('payment-note');
+        const selectedMethod = document.querySelector('input[name="payment-method"]:checked');
+        const submitBtn = document.getElementById('payment-submit');
+        
+        const amount = amountInput.value.trim();
         if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
             this.showError('Please enter a valid payment amount');
+            amountInput.focus();
             return;
         }
 
         const paymentAmount = parseFloat(amount);
+        const { customer, totalAmount, currentPaid } = this.currentPaymentData;
         const newPaidAmount = currentPaid + paymentAmount;
+
+        // Disable submit button and show loading
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i data-feather="loader"></i> Processing...';
+        feather.replace();
 
         try {
             this.showLoading(true);
 
             const paymentData = {
-                customer_id: customerId,
+                customer_id: customer.id,
                 month: this.currentMonth,
                 paid_amount: newPaidAmount,
                 total_amount: totalAmount,
                 payment_date: new Date().toISOString().split('T')[0],
                 last_payment_amount: paymentAmount,
+                payment_method: selectedMethod.value,
+                payment_note: noteInput.value.trim() || null,
                 updated_at: new Date().toISOString()
             };
 
             // Check if payment record exists
-            const existingPayment = this.payments.find(p => p.customer_id === customerId);
+            const existingPayment = this.payments.find(p => p.customer_id === customer.id);
             
             if (existingPayment) {
                 // Update existing payment
@@ -389,6 +516,11 @@ class PaymentManager {
             }
 
             this.showSuccess(`Payment of ₹${paymentAmount} recorded for ${customer.name}`);
+            
+            // Close dialog
+            document.getElementById('payment-dialog').classList.remove('active');
+            this.currentPaymentData = null;
+            
             await this.loadData(); // Refresh data
 
         } catch (error) {
@@ -396,6 +528,11 @@ class PaymentManager {
             this.showError('Failed to record payment');
         } finally {
             this.showLoading(false);
+            
+            // Reset submit button
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i data-feather="check"></i> Record Payment';
+            feather.replace();
         }
     }
 
@@ -435,7 +572,7 @@ class PaymentManager {
             });
 
             const balance = totalAmount - totalPaid;
-            const status = balance <= 0 ? 'Paid' : `Balance: ₹${balance}`;
+            const status = balance <= 0 ? 'Paid' : `Balance Due: ₹${balance}`;
 
             // Use config manager for payment message
             const message = configManager.getPaymentMessage(customer.name, monthName, paymentAmount, totalPaid, totalAmount, status);
@@ -867,51 +1004,146 @@ class PaymentManager {
                 year: 'numeric' 
             });
 
-            // PDF Title and Header
-            doc.setFontSize(20);
-            doc.setTextColor(40, 40, 40);
-            doc.text('SUDHA SAGAR', 20, 25);
+            // Modern PDF Header with gradient effect
+            doc.setFillColor(124, 58, 237); // Purple gradient start
+            doc.rect(0, 0, 210, 35, 'F');
             
-            doc.setFontSize(16);
-            doc.text('Payment Management Report', 20, 35);
-            
-            doc.setFontSize(12);
-            doc.text(`Month: ${monthName}`, 20, 45);
-            doc.text(`Generated on: ${new Date().toLocaleDateString('en-IN')}`, 20, 52);
+            // Company Logo area (placeholder)
+            doc.setFillColor(255, 255, 255);
+            doc.circle(25, 17.5, 8, 'F');
+            doc.setFontSize(8);
+            doc.setTextColor(124, 58, 237);
+            doc.text('SS', 22, 20);
 
-            // Summary Statistics
+            // Header Text
+            doc.setFontSize(24);
+            doc.setTextColor(255, 255, 255);
+            doc.text('SUDHA SAGAR', 40, 20);
+            
+            doc.setFontSize(14);
+            doc.setTextColor(240, 240, 240);
+            doc.text('Payment Management Report', 40, 28);
+
+            // Date info
+            doc.setFontSize(10);
+            doc.setTextColor(220, 220, 220);
+            doc.text(`${monthName} | Generated: ${new Date().toLocaleDateString('en-IN')}`, 140, 20);
+
+            // Summary Statistics with colored cards
             const totalRevenue = this.paymentData.reduce((sum, data) => sum + data.totalAmount, 0);
             const totalPaid = this.paymentData.reduce((sum, data) => sum + data.paidAmount, 0);
+            const totalBalance = totalRevenue - totalPaid;
             const paidCustomers = this.paymentData.filter(data => data.paymentStatus === 'paid').length;
             const pendingPayments = this.paymentData.filter(data => data.paymentStatus === 'pending').length;
             const partialPayments = this.paymentData.filter(data => data.paymentStatus === 'partial').length;
             const totalMilk = this.paymentData.reduce((sum, data) => sum + data.totalMilk, 0);
 
-            // Summary box
-            doc.setFillColor(245, 245, 245);
-            doc.rect(20, 60, 170, 35, 'F');
+            // Summary Cards Row 1
+            doc.setFontSize(12);
+            doc.setTextColor(50, 50, 50);
+            doc.text('MONTHLY OVERVIEW', 20, 50);
+
+            // Revenue Card
+            doc.setFillColor(220, 252, 231); // Light green
+            doc.rect(20, 55, 50, 25, 'F');
+            doc.setDrawColor(34, 197, 94);
+            doc.rect(20, 55, 50, 25, 'S');
             
-            doc.setFontSize(10);
-            doc.setTextColor(60, 60, 60);
-            doc.text('MONTHLY SUMMARY', 25, 70);
+            doc.setFontSize(18);
+            doc.setTextColor(21, 128, 61);
+            doc.text(`₹${totalRevenue}`, 25, 66);
+            doc.setFontSize(9);
+            doc.setTextColor(75, 85, 99);
+            doc.text('Total Revenue', 25, 74);
+
+            // Paid Amount Card
+            doc.setFillColor(187, 247, 208); // Medium green
+            doc.rect(75, 55, 50, 25, 'F');
+            doc.setDrawColor(34, 197, 94);
+            doc.rect(75, 55, 50, 25, 'S');
             
-            doc.text(`Total Customers: ${this.paymentData.length}`, 25, 78);
-            doc.text(`Paid Customers: ${paidCustomers}`, 25, 84);
-            doc.text(`Pending Payments: ${pendingPayments}`, 25, 90);
+            doc.setFontSize(18);
+            doc.setTextColor(21, 128, 61);
+            doc.text(`₹${totalPaid}`, 80, 66);
+            doc.setFontSize(9);
+            doc.setTextColor(75, 85, 99);
+            doc.text('Amount Collected', 80, 74);
+
+            // Balance Card
+            doc.setFillColor(254, 226, 226); // Light red
+            doc.rect(130, 55, 50, 25, 'F');
+            doc.setDrawColor(239, 68, 68);
+            doc.rect(130, 55, 50, 25, 'S');
             
-            doc.text(`Total Revenue: ₹${totalRevenue}`, 100, 78);
-            doc.text(`Total Paid: ₹${totalPaid}`, 100, 84);
-            doc.text(`Total Milk: ${totalMilk.toFixed(1)}L`, 100, 90);
+            doc.setFontSize(18);
+            doc.setTextColor(185, 28, 28);
+            doc.text(`₹${totalBalance}`, 135, 66);
+            doc.setFontSize(9);
+            doc.setTextColor(75, 85, 99);
+            doc.text('Balance Due', 135, 74);
+
+            // Customer Stats Row 2
+            // Paid Customers
+            doc.setFillColor(220, 252, 231);
+            doc.rect(20, 85, 35, 20, 'F');
+            doc.setDrawColor(34, 197, 94);
+            doc.rect(20, 85, 35, 20, 'S');
+            
+            doc.setFontSize(16);
+            doc.setTextColor(21, 128, 61);
+            doc.text(`${paidCustomers}`, 25, 96);
+            doc.setFontSize(8);
+            doc.setTextColor(75, 85, 99);
+            doc.text('Paid Customers', 25, 102);
+
+            // Pending Customers
+            doc.setFillColor(254, 226, 226);
+            doc.rect(60, 85, 35, 20, 'F');
+            doc.setDrawColor(239, 68, 68);
+            doc.rect(60, 85, 35, 20, 'S');
+            
+            doc.setFontSize(16);
+            doc.setTextColor(185, 28, 28);
+            doc.text(`${pendingPayments}`, 65, 96);
+            doc.setFontSize(8);
+            doc.setTextColor(75, 85, 99);
+            doc.text('Pending', 65, 102);
+
+            // Partial Customers
+            doc.setFillColor(255, 237, 213);
+            doc.rect(100, 85, 35, 20, 'F');
+            doc.setDrawColor(245, 158, 11);
+            doc.rect(100, 85, 35, 20, 'S');
+            
+            doc.setFontSize(16);
+            doc.setTextColor(217, 119, 6);
+            doc.text(`${partialPayments}`, 105, 96);
+            doc.setFontSize(8);
+            doc.setTextColor(75, 85, 99);
+            doc.text('Partial', 105, 102);
+
+            // Milk Delivered
+            doc.setFillColor(239, 246, 255);
+            doc.rect(140, 85, 40, 20, 'F');
+            doc.setDrawColor(59, 130, 246);
+            doc.rect(140, 85, 40, 20, 'S');
+            
+            doc.setFontSize(16);
+            doc.setTextColor(29, 78, 216);
+            doc.text(`${totalMilk.toFixed(1)}L`, 145, 96);
+            doc.setFontSize(8);
+            doc.setTextColor(75, 85, 99);
+            doc.text('Total Milk', 145, 102);
 
             // Customer Payment Table
             const tableColumns = [
                 'Customer Name',
                 'Phone',
-                'Days Delivered',
+                'Days',
                 'Milk (L)',
-                'Total Amount',
-                'Paid Amount',
-                'Balance',
+                'Total',
+                'Paid',
+                'Balance Due',
                 'Status'
             ];
 
@@ -926,72 +1158,118 @@ class PaymentManager {
                 data.paymentStatus.charAt(0).toUpperCase() + data.paymentStatus.slice(1)
             ]);
 
-            // Use autoTable plugin to create the table
+            // Enhanced Table with better styling
             doc.autoTable({
                 head: [tableColumns],
                 body: tableRows,
-                startY: 105,
+                startY: 115,
                 styles: {
-                    fontSize: 8,
-                    cellPadding: 3
+                    fontSize: 9,
+                    cellPadding: 5,
+                    lineColor: [200, 200, 200],
+                    lineWidth: 0.5,
+                    textColor: [50, 50, 50],
+                    font: 'helvetica'
                 },
                 headStyles: {
-                    fillColor: [80, 150, 220],
-                    textColor: 255,
-                    fontSize: 9,
-                    fontStyle: 'bold'
+                    fillColor: [124, 58, 237], // Purple header
+                    textColor: [255, 255, 255],
+                    fontSize: 10,
+                    fontStyle: 'bold',
+                    cellPadding: 6,
+                    halign: 'center'
                 },
                 alternateRowStyles: {
-                    fillColor: [250, 250, 250]
+                    fillColor: [248, 250, 252] // Very light blue-gray
                 },
                 columnStyles: {
-                    0: { cellWidth: 30 }, // Customer Name
-                    1: { cellWidth: 22 }, // Phone
-                    2: { cellWidth: 15 }, // Days Delivered
-                    3: { cellWidth: 15 }, // Milk
-                    4: { cellWidth: 20 }, // Total Amount
-                    5: { cellWidth: 20 }, // Paid Amount
-                    6: { cellWidth: 18 }, // Balance
-                    7: { cellWidth: 18 }  // Status
+                    0: { cellWidth: 32, halign: 'left' }, // Customer Name
+                    1: { cellWidth: 25, halign: 'left' }, // Phone
+                    2: { cellWidth: 15, halign: 'center' }, // Days Delivered
+                    3: { cellWidth: 18, halign: 'center' }, // Milk
+                    4: { cellWidth: 22, halign: 'right' }, // Total Amount
+                    5: { cellWidth: 22, halign: 'right' }, // Paid Amount
+                    6: { cellWidth: 25, halign: 'right' }, // Balance Due
+                    7: { cellWidth: 20, halign: 'center' }  // Status
                 },
                 didDrawCell: function(data) {
-                    // Color code payment status
+                    // Enhanced color coding for payment status
                     if (data.column.index === 7) { // Status column
                         const status = data.cell.text[0].toLowerCase();
                         if (status === 'paid') {
-                            data.cell.styles.textColor = [34, 139, 34]; // Green
+                            data.cell.styles.textColor = [22, 163, 74]; // Modern green
+                            data.cell.styles.fillColor = [240, 253, 244]; // Light green background
+                            data.cell.styles.fontStyle = 'bold';
                         } else if (status === 'pending') {
-                            data.cell.styles.textColor = [220, 20, 60]; // Red
+                            data.cell.styles.textColor = [239, 68, 68]; // Modern red
+                            data.cell.styles.fillColor = [254, 242, 242]; // Light red background
+                            data.cell.styles.fontStyle = 'bold';
                         } else if (status === 'partial') {
-                            data.cell.styles.textColor = [255, 140, 0]; // Orange
+                            data.cell.styles.textColor = [217, 119, 6]; // Modern orange
+                            data.cell.styles.fillColor = [255, 251, 235]; // Light orange background
+                            data.cell.styles.fontStyle = 'bold';
                         }
                     }
                     
-                    // Highlight balance amounts
-                    if (data.column.index === 6) { // Balance column
+                    // Enhanced balance column styling
+                    if (data.column.index === 6) { // Balance Due column
                         const balance = parseFloat(data.cell.text[0].replace('₹', ''));
                         if (balance > 0) {
-                            data.cell.styles.textColor = [220, 20, 60]; // Red for pending balance
+                            data.cell.styles.textColor = [185, 28, 28]; // Dark red for pending balance
+                            data.cell.styles.fillColor = [254, 242, 242]; // Light red background
+                            data.cell.styles.fontStyle = 'bold';
+                        } else {
+                            data.cell.styles.textColor = [22, 163, 74]; // Green for zero balance
+                            data.cell.styles.fillColor = [240, 253, 244]; // Light green background
+                        }
+                    }
+
+                    // Enhanced paid amount column styling
+                    if (data.column.index === 5) { // Paid Amount column
+                        const paidAmount = parseFloat(data.cell.text[0].replace('₹', ''));
+                        if (paidAmount > 0) {
+                            data.cell.styles.textColor = [22, 163, 74]; // Green for paid amounts
                             data.cell.styles.fontStyle = 'bold';
                         }
+                    }
+
+                    // Enhanced total amount column styling
+                    if (data.column.index === 4) { // Total Amount column
+                        data.cell.styles.textColor = [30, 64, 175]; // Blue for total amounts
+                        data.cell.styles.fontStyle = 'bold';
                     }
                 }
             });
 
-            // Footer with timestamp
+            // Modern Footer with enhanced styling
             const pageCount = doc.internal.getNumberOfPages();
             const pageHeight = doc.internal.pageSize.height;
             
+            // Footer background
+            doc.setFillColor(248, 250, 252);
+            doc.rect(0, pageHeight - 30, 210, 30, 'F');
+            
+            // Footer line
+            doc.setDrawColor(124, 58, 237);
+            doc.setLineWidth(1);
+            doc.line(20, pageHeight - 25, 190, pageHeight - 25);
+            
+            doc.setFontSize(9);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Report generated by SUDHA SAGAR Management System`, 20, pageHeight - 15);
+            
+            doc.setTextColor(124, 58, 237);
+            doc.text(`Page 1 of ${pageCount}`, 170, pageHeight - 15);
+            
             doc.setFontSize(8);
-            doc.setTextColor(128, 128, 128);
-            doc.text(`Report generated by SUDHA SAGAR Management System`, 20, pageHeight - 20);
-            doc.text(`Page 1 of ${pageCount}`, 170, pageHeight - 20);
+            doc.setTextColor(120, 120, 120);
+            doc.text(`${new Date().toLocaleString('en-IN')}`, 20, pageHeight - 8);
 
-            // Save the PDF
-            const fileName = `SUDHA_SAGAR_Payment_Report_${this.currentMonth.replace('-', '_')}.pdf`;
+            // Save the PDF with enhanced filename
+            const fileName = `SUDHA_SAGAR_Payment_Report_${monthName.replace(' ', '_')}_${this.currentMonth}.pdf`;
             doc.save(fileName);
 
-            this.showSuccess(`PDF report generated successfully! File: ${fileName}`);
+            this.showSuccess(`Enhanced PDF report generated! File: ${fileName}`);
 
         } catch (error) {
             console.error('Error generating PDF report:', error);

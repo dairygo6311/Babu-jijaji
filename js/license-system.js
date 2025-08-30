@@ -93,6 +93,8 @@ class LicenseSystem {
 
     // Show expiry warning modal
     showExpiryWarning(daysRemaining, expiryDate) {
+        console.log('showExpiryWarning called with:', daysRemaining, expiryDate);
+        
         // Remove existing warning if any
         const existingWarning = document.getElementById('license-expiry-warning');
         if (existingWarning) {
@@ -135,6 +137,22 @@ class LicenseSystem {
         if (window.feather) {
             feather.replace();
         }
+        
+        // Force focus and ensure visibility
+        setTimeout(() => {
+            const modal = document.getElementById('license-expiry-warning');
+            if (modal) {
+                modal.scrollIntoView();
+                modal.focus();
+                console.log('License warning modal created and displayed');
+            }
+        }, 100);
+    }
+
+    // Test function to manually show warning modal (for debugging)
+    testShowWarning() {
+        console.log('Testing license warning modal...');
+        this.showExpiryWarning(1, '31/8/2025');
     }
 
     // Verify a license key
@@ -208,10 +226,12 @@ class LicenseSystem {
             // Check for expiry warning only on dashboard
             const currentPage = window.location.pathname;
             if (currentPage.includes('dashboard.html') || currentPage === '/') {
-                const warningCheck = this.checkExpiryWarning(expiresAt);
+                const warningCheck = this.checkExpiryWarning(expiresAt, 3);
+                console.log('License expiry check on dashboard:', warningCheck);
                 if (warningCheck && warningCheck.showWarning) {
                     // Show warning after a small delay to ensure page loads
                     setTimeout(() => {
+                        console.log('Showing expiry warning for', warningCheck.daysRemaining, 'days remaining');
                         this.showExpiryWarning(warningCheck.daysRemaining, warningCheck.expiryDate);
                     }, 1000);
                 }
@@ -423,4 +443,8 @@ class LicenseSystem {
 
 // Create and export a singleton instance
 const licenseSystem = new LicenseSystem();
+
+// Make it available globally for testing
+window.licenseSystem = licenseSystem;
+
 export default licenseSystem;

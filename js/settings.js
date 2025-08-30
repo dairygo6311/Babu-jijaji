@@ -92,14 +92,14 @@ class SettingsManager {
             
             // Firebase Configuration (from firebase-config.js)
             firebase: {
-                apiKey: "AIzaSyDL7AzbkoI8XXn9TfRwOg9K2T0M-K60p3I",
-    authDomain: "dairy-4aee1.firebaseapp.com",
-    databaseURL: "https://dairy-4aee1-default-rtdb.firebaseio.com",
-    projectId: "dairy-4aee1",
-    storageBucket: "dairy-4aee1.firebasestorage.app",
-    messagingSenderId: "952312422395",
-    appId: "1:952312422395:web:909f176fc2b4530008355e",
-    measurementId: "G-J6L08JDM5M"
+                apiKey: "AIzaSyBMCYSn55b_n6cn8a4RRGnWu3EaAg7IUtg",
+  authDomain: "babul-ji.firebaseapp.com",
+  databaseURL: "https://babul-ji-default-rtdb.firebaseio.com",
+  projectId: "babul-ji",
+  storageBucket: "babul-ji.firebasestorage.app",
+  messagingSenderId: "860046675062",
+  appId: "1:860046675062:web:1e4e4000deec9286e3e357",
+  measurementId: "G-YW0VG1QMMB"
             },
             
             // Telegram Configuration
